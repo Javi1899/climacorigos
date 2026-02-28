@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EL TIEMPO EN CORIGOS</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #00ff88;
+    --lime: #aaff00;
+    --darker: #000800;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--darker);
+    color: #ccffdd;
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.04) 1px, transparent 1px);
+    background-size: 55px 55px;
+    animation: gridMove 25s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 0%, rgba(0,100,30,0.18) 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 100%, rgba(170,255,0,0.07) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes gridMove {
+    0%   { background-position: 0 0; }
+    100% { background-position: 55px 55px; }
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  header {
+    text-align: center;
+    padding: 44px 0 32px;
+    position: relative;
+  }
+
+  .header-line-top, .header-line-bottom {
+    position: absolute;
+    left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+    opacity: 0.3;
+  }
+  .header-line-top { top: 0; }
+  .header-line-bottom { bottom: 0; }
+
+  .mountain-deco {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0.06;
+  }
+  .mountain-deco svg { width: 100%; height: 100%; }
+
+  h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.6rem, 4.5vw, 3.2rem);
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    background: linear-gradient(135deg, #ffffff 0%, var(--green) 50%, var(--lime) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 18px rgba(0,255,136,0.4));
+  }
+
+  .subtitle {
+    font-size: 0.82rem;
+    letter-spacing: 0.38em;
+    color: var(--green);
+    margin-top: 8px;
+    opacity: 0.75;
+    text-transform: uppercase;
+  }
+
+  .coords {
+    font-size: 0.72rem;
+    color: var(--lime);
+    opacity: 0.5;
+    letter-spacing: 0.22em;
+    margin-top: 5px;
+  }
+
+  .alt-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,255,136,0.07);
+    border: 1px solid rgba(0,255,136,0.25);
+    border-radius: 20px;
+    padding: 5px 16px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.72rem;
+    color: var(--green);
+    margin-top: 10px;
+    letter-spacing: 0.15em;
+  }
+
+  .current-section {
+    background: rgba(0,18,5,0.75);
+    border: 1px solid rgba(0,255,136,0.18);
+    border-radius: 4px;
+    padding: 30px;
+    margin: 30px 0;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+  }
+
+  .current-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--green), var(--lime), transparent);
+    animation: scanline 4s linear infinite;
+  }
+
+  @keyframes scanline {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  .current-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 30px;
+    align-items: center;
+  }
+
+  @media (max-width: 700px) {
+    .current-grid { grid-template-columns: 1fr; }
+    .current-divider { display: none; }
+  }
+
+  .current-temp-display { text-align: center; }
+
+  .temp-value {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(4rem, 10vw, 7rem);
+    font-weight: 900;
+    color: #fff;
+    line-height: 1;
+    filter: drop-shadow(0 0 12px rgba(0,255,136,0.5));
+  }
+
+  .temp-unit {
+    color: var(--green);
+    font-size: 0.38em;
+    vertical-align: super;
+  }
+
+  .current-desc {
+    font-size: 1.05rem;
+    letter-spacing: 0.25em;
+    color: var(--green);
+    text-transform: uppercase;
+    margin-top: 10px;
+  }
+
+  .current-divider {
+    width: 1px;
+    height: 150px;
+    background: linear-gradient(180deg, transparent, var(--green), transparent);
+    opacity: 0.35;
+  }
+
+  .current-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .stat-item {
+    background: rgba(0,255,136,0.04);
+    border: 1px solid rgba(0,255,136,0.13);
+    border-radius: 3px;
+    padding: 12px 14px;
+  }
+
+  .stat-label {
+    font-size: 0.63rem;
+    letter-spacing: 0.28em;
+    color: var(--lime);
+    text-transform: uppercase;
+    opacity: 0.75;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .stat-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .stat-unit {
+    font-size: 0.68rem;
+    color: var(--green);
+    margin-left: 3px;
+  }
+
+  .section-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.82rem;
+    letter-spacing: 0.38em;
+    color: var(--green);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 35px 0 14px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(0,255,136,0.4), transparent);
+  }
+
+  .extra-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin: 14px 0;
+  }
+
+  .extra-card {
+    background: rgba(0,18,5,0.75);
+    border: 1px solid rgba(0,255,136,0.12);
+    border-radius: 4px;
+    padding: 18px 16px;
+    backdrop-filter: blur(8px);
+    transition: all 0.3s;
+  }
+
+  .extra-card:hover {
+    border-color: rgba(0,255,136,0.3);
+    background: rgba(0,30,10,0.85);
+  }
+
+  .extra-icon { font-size: 1.6rem; margin-bottom: 8px; }
+
+  .extra-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.28em;
+    color: rgba(0,255,136,0.5);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .extra-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .extra-unit {
+    font-size: 0.68rem;
+    color: var(--green);
+    margin-left: 3px;
+  }
+
+  .extra-sub {
+    font-size: 0.7rem;
+    color: rgba(0,255,136,0.4);
+    margin-top: 3px;
+  }
+
+  .snow-section {
+    background: rgba(0,18,5,0.75);
+    border: 1px solid rgba(170,255,0,0.15);
+    border-radius: 4px;
+    padding: 24px;
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .snow-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--lime), transparent);
+    opacity: 0.5;
+  }
+
+  .snow-main-row {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .snow-icon-big { font-size: 3rem; }
+
+  .snow-data { flex: 1; min-width: 160px; }
+
+  .snow-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.32em;
+    color: rgba(170,255,0,0.55);
+    text-transform: uppercase;
+  }
+
+  .snow-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #e8ffe8;
+    margin-top: 4px;
+    filter: drop-shadow(0 0 8px rgba(170,255,0,0.3));
+  }
+
+  .snow-sub {
+    font-size: 0.72rem;
+    color: rgba(170,255,0,0.5);
+    margin-top: 2px;
+  }
+
+  .snow-track-wrap { flex: 2; min-width: 200px; }
+
+  .snow-track-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.62rem;
+    color: rgba(0,255,136,0.4);
+    letter-spacing: 0.12em;
+    margin-bottom: 6px;
+  }
+
+  .snow-track {
+    height: 8px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .snow-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--green), var(--lime), #ffffff);
+    transition: width 1.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+    box-shadow: 0 0 10px rgba(170,255,0,0.4);
+  }
+
+  .snow-peaks {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .peak-item {
+    background: rgba(170,255,0,0.05);
+    border: 1px solid rgba(170,255,0,0.15);
+    border-radius: 3px;
+    padding: 8px 14px;
+    font-size: 0.72rem;
+    color: rgba(200,255,150,0.75);
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
+  }
+
+  .peak-item strong {
+    display: block;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.88rem;
+    color: var(--lime);
+    margin-bottom: 2px;
+  }
+
+  .forecast-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+  }
+
+  @media (max-width: 950px) { .forecast-grid { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 520px)  { .forecast-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .forecast-card {
+    background: rgba(0,12,3,0.85);
+    border: 1px solid rgba(0,255,136,0.1);
+    border-radius: 4px;
+    padding: 15px 10px;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .forecast-card:hover {
+    border-color: rgba(0,255,136,0.45);
+    background: rgba(0,30,10,0.9);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,255,136,0.08);
+  }
+
+  .forecast-card.today {
+    border-color: rgba(0,255,136,0.38);
+    background: rgba(0,40,15,0.65);
+  }
+
+  .forecast-card.today::before {
+    content: 'HOY';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    background: var(--green);
+    color: #000;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.53rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    padding: 2px 0;
+  }
+
+  .fc-day {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.63rem;
+    letter-spacing: 0.18em;
+    color: var(--lime);
+    margin-bottom: 6px;
+    margin-top: 8px;
+  }
+
+  .forecast-card.today .fc-day { margin-top: 16px; }
+
+  .fc-icon {
+    font-size: 1.75rem;
+    margin: 6px 0;
+    filter: drop-shadow(0 0 8px rgba(0,255,136,0.3));
+  }
+
+  .fc-temp-max {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .fc-temp-min {
+    font-size: 0.82rem;
+    color: rgba(180,255,210,0.45);
+    margin-top: 2px;
+  }
+
+  .fc-detail {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0,255,136,0.1);
+    font-size: 0.68rem;
+    color: rgba(130,220,160,0.65);
+    line-height: 1.9;
+    text-align: left;
+  }
+
+  .fc-detail span { color: var(--green); font-weight: 600; }
+
+  .update-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-top: 1px solid rgba(0,255,136,0.08);
+    margin-top: 20px;
+    font-size: 0.68rem;
+    color: rgba(0,255,136,0.38);
+    letter-spacing: 0.12em;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .live-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    margin-right: 7px;
+    animation: pulse 2s ease-in-out infinite;
+    box-shadow: 0 0 7px var(--green);
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.45; transform: scale(0.75); }
+  }
+
+  .loading {
+    text-align: center;
+    padding: 70px 0;
+    color: var(--green);
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.3em;
+  }
+
+  .spinner {
+    display: block;
+    width: 42px;
+    height: 42px;
+    border: 2px solid rgba(0,255,136,0.15);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    margin: 20px auto 0;
+    animation: spin 0.9s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg {
+    background: rgba(255,60,60,0.08);
+    border: 1px solid rgba(255,60,60,0.25);
+    color: #ff9999;
+    padding: 14px 20px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    margin: 10px 0;
+    line-height: 1.6;
+  }
+
+  footer {
+    text-align: center;
+    padding: 35px 0 22px;
+  }
+
+  footer::before {
+    content: '';
+    display: block;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,255,136,0.2), transparent);
+    margin-bottom: 22px;
+  }
+
+  .footer-text {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.42em;
+    color: rgba(0,255,136,0.35);
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="header-line-top"></div>
+    <div class="mountain-deco">
+      <svg viewBox="0 0 1200 200" preserveAspectRatio="none">
+        <polygon points="0,200 120,80 250,140 380,40 520,120 660,25 800,95 950,50 1100,90 1200,60 1200,200" fill="rgba(0,255,136,1)"/>
+      </svg>
+    </div>
+    <h1>EL TIEMPO EN CORIGOS</h1>
+    <div class="subtitle">Estación Meteorológica · Concejo de Aller · Asturias</div>
+    <div class="coords">Ref. Moreda de Aller · 43.1685°N · 5.7376°O · Alt. referencia: 305 m</div>
+    <div><span class="alt-badge">🏔️ CORIGOS ~850 m · Valle de Aller · Picos de Europa</span></div>
+    <div class="header-line-bottom"></div>
+  </header>
+
+  <div id="main-content">
+    <div class="loading">
+      CARGANDO DATOS METEOROLÓGICOS
+      <span class="spinner"></span>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-text">Página de JaviTJ</div>
+  </footer>
+
+</div>
+
+<script>
+// ============================================================
+// Referencia meteorológica: Moreda de Aller (6 km de Corigos)
+// Coordenadas Moreda: 43.1685°N, -5.7376°O, altitud 305 m
+// Corigos está a ~850 m → ajustamos temperatura por altitud
+// ============================================================
+const LAT        = 43.1685;
+const LON        = -5.7376;
+const ALT_REF    = 305;   // altitud Moreda en metros
+const ALT_COR    = 850;   // altitud Corigos en metros
+const LAPSE      = 6.5;   // gradiente: °C por 1000 m
+
+const DAYS   = ['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'];
+const MONTHS = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+
+function adjTemp(t) {
+  return +(t - LAPSE * (ALT_COR - ALT_REF) / 1000).toFixed(1);
+}
+
+function wIcon(code, day) {
+  const m = {
+    0:day?'☀️':'🌙', 1:day?'🌤️':'🌤️', 2:'⛅', 3:'☁️',
+    45:'🌫️', 48:'🌫️', 51:'🌦️', 53:'🌦️', 55:'🌧️',
+    61:'🌧️', 63:'🌧️', 65:'🌧️', 71:'🌨️', 73:'🌨️', 75:'❄️',
+    80:'🌦️', 81:'🌧️', 82:'⛈️', 85:'🌨️', 86:'❄️',
+    95:'⛈️', 96:'⛈️', 99:'⛈️'
+  };
+  return m[code] || '🌡️';
+}
+
+function wDesc(code) {
+  const d = {
+    0:'Despejado', 1:'Mayormente despejado', 2:'Parcialmente nublado',
+    3:'Nublado', 45:'Niebla', 48:'Niebla con escarcha',
+    51:'Llovizna ligera', 53:'Llovizna moderada', 55:'Llovizna densa',
+    61:'Lluvia ligera', 63:'Lluvia moderada', 65:'Lluvia fuerte',
+    71:'Nieve ligera', 73:'Nieve moderada', 75:'Nieve intensa',
+    80:'Chubascos débiles', 81:'Chubascos moderados', 82:'Chubascos violentos',
+    85:'Chubascos de nieve', 86:'Nieve en chubascos',
+    95:'Tormenta', 96:'Tormenta con granizo', 99:'Tormenta con granizo fuerte'
+  };
+  return d[code] || 'Variable';
+}
+
+function wDir(deg) {
+  return ['N','NE','E','SE','S','SO','O','NO'][Math.round((deg||0)/45)%8];
+}
+
+function snowLevel(tempCorigos) {
+  if (tempCorigos <= 0) return 0;
+  return Math.min(Math.round(ALT_COR + (tempCorigos / LAPSE) * 1000), 2650);
+}
+
+const PEAKS = [
+  { name:'La Collaona', alt:2197 },
+  { name:'Pena Ubiña',  alt:2417 },
+  { name:'Peña Orniz',  alt:1993 },
+];
+
+function peakSnow(lvl, peak) {
+  if (lvl === 0)       return '❄️ Nieve';
+  if (lvl <= peak.alt) return '❄️ Con nieve';
+  return '🟢 Sin nieve';
+}
+
+function hIdx(times) {
+  const s = new Date().toISOString().slice(0,13);
+  const i = times.findIndex(t => t.startsWith(s));
+  return i >= 0 ? i : 0;
+}
+
+async function loadWeather() {
+  const params = new URLSearchParams({
+    latitude:  LAT,
+    longitude: LON,
+    current_weather: true,
+    hourly: 'temperature_2m,relativehumidity_2m,apparent_temperature,precipitation,snowfall,snow_depth,pressure_msl,visibility',
+    daily:  'weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,winddirection_10m_dominant,snowfall_sum,precipitation_hours',
+    wind_speed_unit: 'kmh',
+    timezone: 'Europe/Madrid',
+    forecast_days: 7
+  });
+  const res = await fetch('https://api.open-meteo.com/v1/forecast?' + params);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const json = await res.json();
+  if (json.error) throw new Error(json.reason || 'API error');
+  return json;
+}
+
+function render(data) {
+  const cw    = data.current_weather;
+  const daily = data.daily;
+  const h     = data.hourly;
+  const hi_   = hIdx(h.time);
+  const now   = new Date();
+
+  const tempC   = adjTemp(cw.temperature);
+  const feelsC  = adjTemp(h.apparent_temperature?.[hi_] ?? cw.temperature);
+  const maxHoy  = adjTemp(daily.temperature_2m_max[0]);
+  const minHoy  = adjTemp(daily.temperature_2m_min[0]);
+  const hum     = Math.round(h.relativehumidity_2m?.[hi_] ?? 0);
+  const pres    = Math.round(h.pressure_msl?.[hi_] ?? 0);
+  const vis     = ((h.visibility?.[hi_] ?? 10000) / 1000).toFixed(1);
+  const snowCm  = Math.round((h.snow_depth?.[hi_] ?? 0) * 100);
+  const rain0   = (daily.precipitation_sum[0] || 0).toFixed(1);
+  const precHrs = daily.precipitation_hours?.[0] ?? 0;
+  const windMax = Math.round(daily.windspeed_10m_max[0]);
+  const windDir0= wDir(daily.winddirection_10m_dominant[0]);
+
+  const snowLvl = snowLevel(tempC);
+  const snowPct = Math.min(100, Math.max(1, (snowLvl / 2650) * 100));
+  const time_s  = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+  document.getElementById('main-content').innerHTML = `
+    <div class="current-section">
+      <div class="current-grid">
+        <div class="current-temp-display">
+          <div class="temp-value">${Math.round(tempC)}<span class="temp-unit">°C</span></div>
+          <div class="current-desc">${wIcon(cw.weathercode, cw.is_day)} ${wDesc(cw.weathercode)}</div>
+        </div>
+        <div class="current-divider"></div>
+        <div class="current-stats">
+          <div class="stat-item">
+            <span class="stat-label">💨 Viento</span>
+            <span class="stat-value">${Math.round(cw.windspeed)}<span class="stat-unit">km/h</span></span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">🧭 Dirección</span>
+            <span class="stat-value">${wDir(cw.winddirection)}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">🌧️ Lluvia hoy</span>
+            <span class="stat-value">${rain0}<span class="stat-unit">mm</span></span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">🌡️ Sensación</span>
+            <span class="stat-value">${Math.round(feelsC)}<span class="stat-unit">°C</span></span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">🔺 Máx. hoy</span>
+            <span class="stat-value">${Math.round(maxHoy)}<span class="stat-unit">°C</span></span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">🔻 Mín. hoy</span>
+            <span class="stat-value">${Math.round(minHoy)}<span class="stat-unit">°C</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="update-bar">
+        <span><span class="live-dot"></span>EN VIVO · AUTO-ACTUALIZACIÓN CADA 30 MIN</span>
+        <span>ÚLT. ACT: ${time_s} · REF. METEOROLÓGICA: MOREDA DE ALLER</span>
+      </div>
+    </div>
+
+    <div class="section-title">📊 Condiciones actuales en Corigos</div>
+    <div class="extra-grid">
+      <div class="extra-card">
+        <div class="extra-icon">💧</div>
+        <span class="extra-label">Humedad relativa</span>
+        <div class="extra-value">${hum}<span class="extra-unit">%</span></div>
+        <div class="extra-sub">Vapor de agua en el aire</div>
+      </div>
+      <div class="extra-card">
+        <div class="extra-icon">🔵</div>
+        <span class="extra-label">Presión atmosférica</span>
+        <div class="extra-value">${pres}<span class="extra-unit">hPa</span></div>
+        <div class="extra-sub">Al nivel del mar</div>
+      </div>
+      <div class="extra-card">
+        <div class="extra-icon">👁️</div>
+        <span class="extra-label">Visibilidad</span>
+        <div class="extra-value">${vis}<span class="extra-unit">km</span></div>
+        <div class="extra-sub">Condición actual</div>
+      </div>
+      <div class="extra-card">
+        <div class="extra-icon">🌨️</div>
+        <span class="extra-label">Nieve en el suelo</span>
+        <div class="extra-value">${snowCm}<span class="extra-unit">cm</span></div>
+        <div class="extra-sub">Acumulada actualmente</div>
+      </div>
+      <div class="extra-card">
+        <div class="extra-icon">🕐</div>
+        <span class="extra-label">Horas de lluvia hoy</span>
+        <div class="extra-value">${precHrs}<span class="extra-unit">h</span></div>
+        <div class="extra-sub">Previsión total del día</div>
+      </div>
+      <div class="extra-card">
+        <div class="extra-icon">💨</div>
+        <span class="extra-label">Racha máx. hoy</span>
+        <div class="extra-value">${windMax}<span class="extra-unit">km/h</span></div>
+        <div class="extra-sub">${windDir0}</div>
+      </div>
+    </div>
+
+    <div class="section-title">❄️ Cota de nieve · Macizo de Ubiña</div>
+    <div class="snow-section">
+      <div class="snow-main-row">
+        <div class="snow-icon-big">🏔️</div>
+        <div class="snow-data">
+          <div class="snow-label">Altitud estimada cota de nieve</div>
+          <div class="snow-value">${snowLvl > 0 ? snowLvl.toLocaleString('es') + ' m' : 'Nivel del pueblo'}</div>
+          <div class="snow-sub">${snowLvl <= ALT_COR
+            ? '⚠️ Posible nieve en Corigos'
+            : '+' + (snowLvl - ALT_COR).toLocaleString('es') + ' m sobre el pueblo'
+          }</div>
+        </div>
+        <div class="snow-track-wrap">
+          <div class="snow-track-label">
+            <span>CORIGOS ${ALT_COR}m</span>
+            <span>UBIÑA 2.417m</span>
+          </div>
+          <div class="snow-track">
+            <div class="snow-fill" id="snowFill"></div>
+          </div>
+        </div>
+      </div>
+      <div class="snow-peaks">
+        ${PEAKS.map(p => `
+          <div class="peak-item">
+            <strong>${peakSnow(snowLvl, p)}</strong>
+            ${p.name}<br>
+            <span style="opacity:0.5;font-size:0.65rem">${p.alt.toLocaleString('es')} m</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="section-title">📅 Previsión 7 días</div>
+    <div class="forecast-grid">
+      ${daily.time.map((t, i) => {
+        const date  = new Date(t + 'T12:00:00');
+        const dName = i===0 ? 'HOY' : i===1 ? 'MAÑANA' : DAYS[date.getDay()];
+        const dStr  = date.getDate() + ' ' + MONTHS[date.getMonth()];
+        const maxT  = Math.round(adjTemp(daily.temperature_2m_max[i]));
+        const minT  = Math.round(adjTemp(daily.temperature_2m_min[i]));
+        const rain  = (daily.precipitation_sum[i]||0).toFixed(1);
+        const wind  = Math.round(daily.windspeed_10m_max[i]);
+        const dir   = wDir(daily.winddirection_10m_dominant[i]);
+        const snow  = (daily.snowfall_sum?.[i]||0).toFixed(1);
+        const cota  = snowLevel(maxT);
+        return `
+          <div class="forecast-card ${i===0?'today':''}">
+            <div class="fc-day">${dName}<br><small style="opacity:0.55;font-size:0.54rem">${dStr}</small></div>
+            <div class="fc-icon">${wIcon(daily.weathercode[i],1)}</div>
+            <div class="fc-temp-max">${maxT}°</div>
+            <div class="fc-temp-min">${minT}°</div>
+            <div class="fc-detail">
+              <div>🌧️ <span>${rain}mm</span></div>
+              <div>💨 <span>${wind}km/h ${dir}</span></div>
+              <div>❄️ <span>${cota > 0 ? cota.toLocaleString('es')+'m' : '<'+ALT_COR+'m'}</span></div>
+              <div>🌨️ <span>${snow}cm nieve</span></div>
+            </div>
+          </div>`;
+      }).join('')}
+    </div>
+  `;
+
+  setTimeout(() => {
+    const f = document.getElementById('snowFill');
+    if (f) f.style.width = snowPct + '%';
+  }, 200);
+}
+
+async function init() {
+  try {
+    render(await loadWeather());
+  } catch (err) {
+    console.error(err);
+    document.getElementById('main-content').innerHTML = `
+      <div class="error-msg">
+        ⚠️ No se pudieron obtener los datos: ${err.message}<br>
+        Reintentando en 20 segundos...
+      </div>`;
+    setTimeout(init, 20000);
+  }
+}
+
+init();
+setInterval(init, 30 * 60 * 1000);
+</script>
+</body>
+</html>
